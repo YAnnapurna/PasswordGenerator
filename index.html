@@ -1,10 +1,87 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<div id="result">
+    <h2>Generated Password:</h2>
+    <div style="display: flex; align-items: center; gap: 0.5rem;"></div>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Generator</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            padding: 2.5rem 2rem;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px rgba(44, 62, 80, 0.18);
+            max-width: 350px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #5a189a;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+        form label {
+            display: inline-block;
+            margin: 0.7rem 0 0.2rem 0;
+            color: #333;
+            font-weight: 500;
+        }
+        input[type="number"] {
+            width: 60px;
+            padding: 0.3rem;
+            border-radius: 6px;
+            border: 1px solid #bdbdbd;
+            margin-bottom: 0.7rem;
+        }
+        input[type="checkbox"] {
+            accent-color: #5a189a;
+            margin-left: 0.5rem;
+        }
+        button {
+            margin-top: 1.2rem;
+            padding: 0.7rem 1.5rem;
+            background: linear-gradient(90deg, #5a189a 0%, #9d4edd 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 8px rgba(90,24,154,0.08);
+        }
+        button:hover {
+            background: linear-gradient(90deg, #9d4edd 0%, #5a189a 100%);
+        }
+        #result {
+            margin-top: 2rem;
+        }
+        #result h2 {
+            color: #5a189a;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        #password {
+            font-size: 1.2rem;
+            font-family: 'Fira Mono', monospace;
+            background: #f3f0ff;
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            word-break: break-all;
+            color: #22223b;
+            letter-spacing: 1px;
+            min-height: 1.5em;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -13,15 +90,18 @@
             <label for="length">Password Length:</label>
             <input type="number" id="length" name="length" min="1" max="100" required>
             <br>
-            <label for="letters">Include Letters:</label>
-            <input type="checkbox" id="letters" name="letters" checked>
+            <label for="letters">Include Letters
+                <input type="checkbox" id="letters" name="letters" checked>
+            </label>
             <br>
-            <label for="numbers">Include Numbers:</label>
-            <input type="checkbox" id="numbers" name="numbers" checked>
+            <label for="numbers">Include Numbers
+                <input type="checkbox" id="numbers" name="numbers" checked>
+            </label>
             <br>
-            <label for="symbols">Include Symbols:</label>
-            <input type="checkbox" id="symbols" name="symbols" checked>
-           >
+            <label for="symbols">Include Symbols
+                <input type="checkbox" id="symbols" name="symbols" checked>
+            </label>
+            <br>
             <button type="button" onclick="generatePassword()">Generate Password</button>
         </form>
         <div id="result">
