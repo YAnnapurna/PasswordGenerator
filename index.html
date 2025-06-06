@@ -104,14 +104,52 @@
         .copy-btn:hover {
             color: #764ba2;
         }
+        .toggle-btn {
+            position: absolute;
+            right: 3.5rem;
+            top: 2.1rem;
+            background: none;
+            border: none;
+            color: #5a67d8;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .toggle-btn:hover {
+            color: #764ba2;
+        }
+        .strength-bar {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            margin-top: 1rem;
+            background: #e0e0f7;
+            overflow: hidden;
+        }
+        .strength-bar-inner {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .strength-weak {
+            background: #ff7675;
+        }
+        .strength-medium {
+            background: #fdcb6e;
+        }
+        .strength-strong {
+            background: #55efc4;
+        }
         @media (max-width: 480px) {
             .container {
                 max-width: 95vw;
                 padding: 1.2rem 0.5rem 1.5rem 0.5rem;
             }
-            .copy-btn {
+            .copy-btn, .toggle-btn {
                 right: 0.7rem;
                 top: 1.2rem;
+            }
+            .toggle-btn {
+                right: 2.2rem;
             }
         }
     </style>
@@ -119,6 +157,7 @@
 <body>
     <div class="container">
         <h1>Password Generator</h1>
+        <button class="toggle-btn" title="Show/Hide password" onclick="togglePassword()" aria-label="Show/Hide password">👁️</button>
         <button class="copy-btn" title="Copy password" onclick="copyPassword()" aria-label="Copy password">
             📋
         </button>
@@ -129,46 +168,127 @@
             <label><input type="checkbox" id="letters" checked> Letters</label>
             <label><input type="checkbox" id="numbers" checked> Numbers</label>
             <label><input type="checkbox" id="symbols" checked> Symbols</label>
+            <label><input type="checkbox" id="exclude-similar"> Exclude Similar Characters</label>
+            <label><input type="checkbox" id="require-each"> Require Each Selected Type</label>
         </div>
         <button onclick="generatePassword()">Generate</button>
         <div id="password"></div>
+        <div class="strength-bar"><div id="strength-bar-inner" class="strength-bar-inner"></div></div>
     </div>
     <script>
+        let passwordVisible = false;
+        let lastPassword = "";
+
         function generatePassword() {
             const length = parseInt(document.getElementById('length').value);
             const letters = document.getElementById('letters').checked;
             const numbers = document.getElementById('numbers').checked;
             const symbols = document.getElementById('symbols').checked;
+            const excludeSimilar = document.getElementById('exclude-similar').checked;
+            const requireEach = document.getElementById('require-each').checked;
 
             let charset = '';
-            if (letters) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-            if (numbers) charset += '0123456789';
-            if (symbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+            let sets = [];
+            if (letters) {
+                let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+                if (excludeSimilar) chars = chars.replace(/[O0Il]/g, '');
+                charset += chars;
+                sets.push(chars);
+            }
+            if (numbers) {
+                let chars = '0123456789';
+                if (excludeSimilar) chars = chars.replace(/[01]/g, '');
+                charset += chars;
+                sets.push(chars);
+            }
+            if (symbols) {
+                let chars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+                if (excludeSimilar) chars = chars.replace(/[|;:,.]/g, '');
+                charset += chars;
+                sets.push(chars);
+            }
 
             const passwordDiv = document.getElementById('password');
             passwordDiv.classList.remove('copied');
 
             if (!charset) {
                 passwordDiv.textContent = 'Select at least one option!';
+                updateStrength('');
+                lastPassword = '';
                 return;
             }
 
             let password = '';
-            for (let i = 0; i < length; i++) {
-                password += charset[Math.floor(Math.random() * charset.length)];
+            if (requireEach && sets.length > 1 && length >= sets.length) {
+                // Ensure at least one from each set
+                let requiredChars = sets.map(set => set[Math.floor(Math.random() * set.length)]);
+                for (let i = 0; i < length - sets.length; i++) {
+                    password += charset[Math.floor(Math.random() * charset.length)];
+                }
+                password += requiredChars.join('');
+                // Shuffle password
+                password = password.split('').sort(() => Math.random() - 0.5).join('');
+            } else {
+                for (let i = 0; i < length; i++) {
+                    password += charset[Math.floor(Math.random() * charset.length)];
+                }
             }
-            passwordDiv.textContent = password;
+            lastPassword = password;
+            passwordDiv.textContent = passwordVisible ? password : '•'.repeat(password.length);
+            passwordDiv.setAttribute('data-password', password);
+            updateStrength(password);
         }
 
         function copyPassword() {
             const passwordDiv = document.getElementById('password');
-            const password = passwordDiv.textContent;
+            const password = passwordDiv.getAttribute('data-password') || passwordDiv.textContent;
             if (!password || password === 'Select at least one option!') return;
             navigator.clipboard.writeText(password).then(() => {
                 passwordDiv.classList.add('copied');
                 setTimeout(() => passwordDiv.classList.remove('copied'), 1200);
             });
         }
+
+        function togglePassword() {
+            passwordVisible = !passwordVisible;
+            const passwordDiv = document.getElementById('password');
+            const password = passwordDiv.getAttribute('data-password') || lastPassword;
+            passwordDiv.textContent = passwordVisible ? password : '•'.repeat(password.length);
+        }
+
+        function updateStrength(password) {
+            const bar = document.getElementById('strength-bar-inner');
+            let score = 0;
+            if (!password || password.length < 4) {
+                bar.style.width = '0%';
+                bar.className = 'strength-bar-inner';
+                return;
+            }
+            if (password.length >= 8) score++;
+            if (password.length >= 12) score++;
+            if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            if (score <= 2) {
+                bar.style.width = '33%';
+                bar.className = 'strength-bar-inner strength-weak';
+            } else if (score <= 4) {
+                bar.style.width = '66%';
+                bar.className = 'strength-bar-inner strength-medium';
+            } else {
+                bar.style.width = '100%';
+                bar.className = 'strength-bar-inner strength-strong';
+            }
+        }
+
+        // Generate initial password and update on option change
+        window.onload = () => {
+            generatePassword();
+            document.querySelectorAll('.options input').forEach(el => {
+                el.addEventListener('change', generatePassword);
+            });
+            document.getElementById('length').addEventListener('input', generatePassword);
+        };
     </script>
 </body>
 </html>
